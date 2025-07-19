@@ -1,0 +1,26 @@
+version: '3'
+services:
+  mysql:
+    restart: always
+    image: mysql:5.7.18
+    container_name: mysql-lable
+    volumes:
+      - /apps/mysql/mydir:/mydir
+      - /apps/mysql/datadir:/var/lib/mysql
+      - /apps/mysql/conf/my.cnf:/etc/my.cnf
+      - /apps/mysql/source:/docker-entrypoint-initdb.d
+    environment:
+      - "MYSQL_ROOT_PASSWORD=password"
+      - "MYSQL_DATABASE=lbhdatabase"
+      - "TZ=Asia/Shanghai"
+    ports:
+      - 3306:3306
+  webapi:
+    image: webapi
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 5157:5157
+    depends_on:
+      - mysql
