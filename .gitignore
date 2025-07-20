@@ -1,4 +1,4 @@
-﻿# Build and Object Folders  
+# Build and Object Folders  
 bin/  
 obj/  
   
@@ -86,3 +86,4 @@ AdminWebAPI/.vs/AdminWebAPI/v17
 AdminWebAPI/.vs/ProjectEvaluation
 *.pt
 *.pyc
+*.onnx
