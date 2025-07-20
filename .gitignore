@@ -87,3 +87,5 @@ AdminWebAPI/.vs/ProjectEvaluation
 *.pt
 *.pyc
 *.onnx
+.idea
+.DS_Store
