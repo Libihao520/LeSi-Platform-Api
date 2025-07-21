@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option csharp_namespace = "LeSi.Admin.WebApi";
+
+package security;
+
+message GetPublicKeyRequest {
+}
+
+message PublicKeyResponse {
+  string public_key = 1;
+}
+
+service PublicKeyService {
+
+  rpc GetPublicKey (GetPublicKeyRequest) returns (PublicKeyResponse);
+}

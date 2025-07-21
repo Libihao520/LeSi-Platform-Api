@@ -5,50 +5,58 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
-	<ItemGroup>
-		<PackageReference Include="Autofac" Version="8.0.0" />
-		<PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
-		<PackageReference Include="AutoMapper" Version="11.0.1" />
-		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.6" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.2" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.2">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.0" />
-		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.0" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Autofac" Version="8.0.0" />
+        <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+        <PackageReference Include="AutoMapper" Version="11.0.1" />
+        <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+        <PackageReference Include="Grpc.Net.ClientFactory" Version="2.71.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.6" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.2" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.0" />
+        <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
+        <PackageReference Include="Google.Protobuf" Version="3.24.4" />
+        <PackageReference Include="Grpc.Tools" Version="2.72.0" PrivateAssets="All" />
+    </ItemGroup>
+    <ItemGroup>
+        <Protobuf Include="Protos\user.proto" GrpcServices="Client" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Interface\Interface.csproj" />
+        <ProjectReference Include="..\Model\Model.csproj" />
+        <ProjectReference Include="..\Service\Service.csproj" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\Interface\Interface.csproj" />
-		<ProjectReference Include="..\Model\Model.csproj" />
-		<ProjectReference Include="..\Service\Service.csproj" />
-	</ItemGroup>
+    <ItemGroup>
+        <None Update="ExcelTemplate\用户管理导入模板.xlsx">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="ExcelTemplate\练题系统答题情况导出模板.docx">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Model\pkq.onnx">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
 
-	<ItemGroup>
-	  <None Update="ExcelTemplate\用户管理导入模板.xlsx">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="ExcelTemplate\练题系统答题情况导出模板.docx">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Model\pkq.onnx">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
+        <None Update="Model\animal.onnx">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
 
-	  <None Update="Model\animal.onnx">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
+        <None Update="ExcelTemplate\题库导入模板.xlsx">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
 
-	  <None Update="ExcelTemplate\题库导入模板.xlsx">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="ExcelTemplate\" />
-	  <Folder Include="TempExcelFiles\" />
-	</ItemGroup>
+    <ItemGroup>
+        <Folder Include="ExcelTemplate\" />
+        <Folder Include="TempExcelFiles\" />
+    </ItemGroup>
 </Project>

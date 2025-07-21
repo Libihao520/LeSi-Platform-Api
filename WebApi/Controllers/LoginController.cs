@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using Interface;
+using LeSi.Admin.WebApi;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Model;
@@ -16,11 +17,14 @@ public class LoginController : ControllerBase
 {
     private IUserService _userService;
     private ICustomJwtService _jwtService;
+    private readonly PublicKeyService.PublicKeyServiceClient _client;
 
-    public LoginController(IUserService userService, ICustomJwtService jwtService)
+    public LoginController(IUserService userService, ICustomJwtService jwtService,
+        PublicKeyService.PublicKeyServiceClient client)
     {
         _userService = userService;
         _jwtService = jwtService;
+        _client = client;
     }
 
     /// <summary>
@@ -79,5 +83,12 @@ public class LoginController : ControllerBase
     public async Task<ApiResult> SendVerificationCode([FromQuery] string email)
     {
         return await _userService.SendVerificationCode(email);
+    }
+
+    [HttpGet]
+    public async Task<ApiResult> GetPublicKey()
+    {
+        var response = await _client.GetPublicKeyAsync(new GetPublicKeyRequest());
+        return ResultHelper.Success("成功", response.PublicKey);
     }
 }

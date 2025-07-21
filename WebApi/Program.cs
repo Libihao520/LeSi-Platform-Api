@@ -1,6 +1,8 @@
 using EFCoreMigrations;
+using LeSi.Admin.WebApi;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Config;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +14,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Register();
 
+builder.Services.AddGrpcClient<PublicKeyService.PublicKeyServiceClient>(options =>
+{
+    options.Address = new Uri("http://localhost:5159");
+});
+
 //注入MyDbcontext
 builder.Services.AddDbContext<MyDbContext>(p =>
 {
@@ -22,6 +29,7 @@ builder.Services.AddDbContext<MyDbContext>(p =>
 // 注册 IHttpContextAccessor  
 builder.Services.AddHttpContextAccessor();  
 
+AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
