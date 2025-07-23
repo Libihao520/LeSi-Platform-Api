@@ -17,10 +17,10 @@ public class LoginController : ControllerBase
 {
     private IUserService _userService;
     private ICustomJwtService _jwtService;
-    private readonly PublicKeyService.PublicKeyServiceClient _client;
+    private readonly AuthService.AuthServiceClient _client;
 
     public LoginController(IUserService userService, ICustomJwtService jwtService,
-        PublicKeyService.PublicKeyServiceClient client)
+        AuthService.AuthServiceClient client)
     {
         _userService = userService;
         _jwtService = jwtService;
@@ -35,22 +35,37 @@ public class LoginController : ControllerBase
     [HttpPost]
     public async Task<ApiResult> GetToken(GetUserReq getUserReq)
     {
-        var res = Task.Run(() =>
+        // var res = Task.Run(() =>
+        // {
+        //     if (string.IsNullOrEmpty(getUserReq.UserName) || string.IsNullOrEmpty(getUserReq.PassWord))
+        //     {
+        //         return ResultHelper.Error("参数不能为空");
+        //     }
+        //
+        //     GetUserRes getUser = _userService.GetUser(getUserReq.UserName, getUserReq.PassWord);
+        //     if (string.IsNullOrEmpty(getUser.Name))
+        //     {
+        //         return ResultHelper.Error("账号不存在，用户名或密码错误！");
+        //     }
+        //
+        //     return ResultHelper.Success("登录成功！", _jwtService.GetToken(getUser));
+        // });
+        // return await res;
+        var loginRequest = new LoginRequest()
         {
-            if (string.IsNullOrEmpty(getUserReq.UserName) || string.IsNullOrEmpty(getUserReq.PassWord))
-            {
-                return ResultHelper.Error("参数不能为空");
-            }
-
-            GetUserRes getUser = _userService.GetUser(getUserReq.UserName, getUserReq.PassWord);
-            if (string.IsNullOrEmpty(getUser.Name))
-            {
-                return ResultHelper.Error("账号不存在，用户名或密码错误！");
-            }
-
-            return ResultHelper.Success("登录成功！", _jwtService.GetToken(getUser));
-        });
-        return await res;
+            Username = getUserReq.UserName,
+            Password = getUserReq.PassWord,
+            PublicKey = getUserReq.PublicKey
+        };
+        var response = await _client.LoginAsync(loginRequest);
+        if (response.Code == 0)
+        {
+            return ResultHelper.Success("成功", response.Token);
+        }
+        else
+        {
+            return ResultHelper.Error(response.Message);
+        }
     }
 
     /// <summary>

@@ -15,4 +15,10 @@ public class GetUserReq
     /// </summary>
     [Required]
     public string? PassWord { get; set; }
+
+    /// <summary>
+    /// 公钥
+    /// </summary>
+    [Required]
+    public string PublicKey { get; set; } = string.Empty;
 }

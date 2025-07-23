@@ -11,7 +11,20 @@ message PublicKeyResponse {
   string public_key = 1;
 }
 
-service PublicKeyService {
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+  string public_key = 3;
+}
 
+// 登录响应
+message LoginResponse {
+  string token = 1;       // 登录成功后返回的JWT Token
+  int32 code = 2;         // 状态码（0=成功，非零=错误码）
+  string message = 3;     // 错误详情（如"用户不存在"）
+}
+
+service AuthService {
   rpc GetPublicKey (GetPublicKeyRequest) returns (PublicKeyResponse);
+  rpc Login (LoginRequest) returns (LoginResponse);
 }
