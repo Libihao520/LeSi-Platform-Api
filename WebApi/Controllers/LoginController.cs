@@ -16,14 +16,12 @@ namespace WebApi.Controllers;
 public class LoginController : ControllerBase
 {
     private IUserService _userService;
-    private ICustomJwtService _jwtService;
     private readonly AuthService.AuthServiceClient _client;
 
-    public LoginController(IUserService userService, ICustomJwtService jwtService,
+    public LoginController(IUserService userService,
         AuthService.AuthServiceClient client)
     {
         _userService = userService;
-        _jwtService = jwtService;
         _client = client;
     }
 

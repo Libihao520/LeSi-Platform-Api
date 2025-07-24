@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -50,8 +51,11 @@ public static class HostBuiderExtend
                     ValidateIssuerSigningKey = true, //是否验证SecurityKey
                     ValidAudience = tokenOptions.Audience, //
                     ValidIssuer = tokenOptions.Issuer, //Issuer，这两项和前面签发jwt的设置一致
-                    IssuerSigningKey =
-                        new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenOptions.SecurityKey)) //拿到SecurityKey 
+                    IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
+                    {
+                        var publicKey= KeyResolverService.GetPublicKeyFromDynamicSource(token);
+                        return new[] { new RsaSecurityKey(publicKey) };
+                    }
                 };
             });
 
