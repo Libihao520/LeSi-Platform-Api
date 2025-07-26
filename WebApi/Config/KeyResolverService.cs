@@ -18,6 +18,8 @@ public class KeyResolverService
 
         try
         {
+            // 成功获取公钥后，刷新缓存时间，续费半小时
+            CacheManager.Set(token, publicKey, TimeSpan.FromMinutes(30));
             var deserialize = JsonSerializer.Deserialize<string>(publicKey);
             var rsa = RSA.Create();
             rsa.ImportFromPem(deserialize);
