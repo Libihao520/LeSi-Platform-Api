@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Model.Options;
 using Model.Other;
+using RabbitMQ.Client;
 
 namespace WebApi.Config;
 
@@ -28,6 +29,19 @@ public static class HostBuiderExtend
         builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("EmailOptions"));
         //AI模块配置
         builder.Services.Configure<List<AiGcService>>(builder.Configuration.GetSection("AiGcOptions"));
+
+        // 添加 RabbitMQ 连接服务
+        builder.Services.AddSingleton<IConnection>(sp =>
+        {
+            var factory = new ConnectionFactory()
+            {
+                HostName = "localhost",
+                Port = 5672,
+                UserName = "admin",
+                Password = "password"
+            };
+            return factory.CreateConnection();
+        });
 
         #region JWT校验
 
@@ -53,7 +67,7 @@ public static class HostBuiderExtend
                     ValidIssuer = tokenOptions.Issuer, //Issuer，这两项和前面签发jwt的设置一致
                     IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
                     {
-                        var publicKey= KeyResolverService.GetPublicKeyFromDynamicSource(token);
+                        var publicKey = KeyResolverService.GetPublicKeyFromDynamicSource(token);
                         return new[] { new RsaSecurityKey(publicKey) };
                     }
                 };

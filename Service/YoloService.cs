@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using AutoMapper;
 using CommonUtil;
 using CommonUtil.RandomIdUtil;
@@ -7,6 +9,7 @@ using Interface;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 using Microsoft.VisualBasic.CompilerServices;
 using Model;
@@ -14,6 +17,7 @@ using Model.Dto.photo;
 using Model.Dto.Yolo;
 using Model.Entities;
 using Model.Other;
+using RabbitMQ.Client;
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
 using SixLabors.ImageSharp;
@@ -29,18 +33,22 @@ public class YoloService : IYoloService
     private readonly IMapper _mapper;
     private MyDbContext _context;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IConnection _rabbitMqConnection;
     private readonly UserInformationUtil _informationUtil;
+    private readonly ILogger<YoloService> _logger;
 
     private static readonly string? BasePath =
         Directory.GetCurrentDirectory();
 
     public YoloService(MyDbContext context, IMapper mapper, IHttpContextAccessor httpContextAccessor,
-        UserInformationUtil informationUtil)
+        UserInformationUtil informationUtil, IConnection rabbitMqConnection, ILogger<YoloService> logger)
     {
         _context = context;
         _mapper = mapper;
         _httpContextAccessor = httpContextAccessor;
         _informationUtil = informationUtil;
+        _rabbitMqConnection = rabbitMqConnection;
+        _logger = logger;
     }
 
     /// <summary>
@@ -96,84 +104,62 @@ public class YoloService : IYoloService
             return "模型不存在，或地址异常";
         }
 
+        // 生成唯一任务ID
+        var taskId = TimeBasedIdGeneratorUtil.GenerateId();
+        var message = new
+        {
+            TaskId = taskId,
+            ModelCls = aiModels.ModelCls,
+            ModelName = aiModels.ModelName,
+            Photo = po.Photo,
+            Path = aiModels.Path,
+        };
+        // 发送到RabbitMQ
+        using (var channel = _rabbitMqConnection.CreateModel())
+        {
+            channel.QueueDeclare(queue: "ai_yolo_recognition_tasks",
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null);
+
+            var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+
+            var properties = channel.CreateBasicProperties();
+            properties.Persistent = true;
+
+            channel.BasicPublish(exchange: "",
+                routingKey: "ai_yolo_recognition_tasks",
+                basicProperties: properties,
+                body: body);
+        }
+
+        _logger.LogInformation($"Task {taskId} submitted for processing");
+
         string base64 = po.Photo.Substring(po.Photo.IndexOf(',') + 1);
         byte[] data = Convert.FromBase64String(base64);
-        using (MemoryStream ms = new MemoryStream(data))
+
+        var yolotbs = new YoLoTbs()
         {
-            var sbjgCount = 0;
-            var result = "";
-            using (var image = Image.Load<Rgba32>(ms))
-            {
-                if (aiModels.ModelCls == "图像分类")
-                {
-                    using var yolo = new Yolo(Path.Combine(BasePath, aiModels.Path), false);
-                    var runClassification = yolo.RunClassification(image);
-                    if (runClassification[0].Confidence < 0.8)
-                    {
-                        result = "未识别出来！";
-                    }
-                    else
-                    {
-                        if (aiModels.ModelName == "动物识别")
-                        {
-                            result = YoloClassAnimalUtil.GetAnimalName(runClassification[0].Label);
-                        }
-                        else
-                        {
-                            result = runClassification[0].Label;
-                        }
-                    }
-                }
+            Id = taskId,
+            Cls = aiModels.ModelCls,
+            Name = aiModels.ModelName,
+            SbJgCount = 0,
+            SbJg = "识别中...",
+            IsManualReview = false,
+            SbZqCount = 0,
+            RgMsCount = 0,
+            Zql = 0,
+            Zhl = 0,
+            CreateDate = DateTime.Now,
+            CreateUserId = createUserId,
+            IsDeleted = 0
+        };
+        yolotbs.Photos = new Photos() { PhotoBase64 = po.Photo };
+        _context.YoLoTbs.Add(yolotbs);
+        _context.SaveChanges();
 
-                if (aiModels.ModelCls == "目标监测")
-                {
-                    using var yolo = new Yolo(Path.Combine(BasePath, aiModels.Path), false);
-                    var results = yolo.RunObjectDetection(image, 0.3);
-                    image.Draw(results);
-                    sbjgCount = results.Count;
-                }
-
-                if (aiModels.ModelCls == "其他模型")
-                {
-                    return "暂未开放";
-                }
-
-
-                using (MemoryStream outputMs = new MemoryStream())
-                {
-                    image.Save(outputMs, new JpegEncoder());
-                    byte[] imageBytes = outputMs.ToArray();
-                    string base64Image = Convert.ToBase64String(imageBytes);
-
-                    var yolotbs = new YoLoTbs()
-                    {
-                        Cls = aiModels.ModelCls,
-                        Name = aiModels.ModelName,
-                        SbJgCount = sbjgCount,
-                        SbJg = result,
-                        IsManualReview = false,
-                        SbZqCount = 0,
-                        RgMsCount = 0,
-                        Zql = 0,
-                        Zhl = 0,
-                        CreateDate = DateTime.Now,
-                        CreateUserId = createUserId,
-                        IsDeleted = 0
-                    };
-                    yolotbs.Photos = new Photos() { PhotoBase64 = "data:image/jpeg;base64," + base64Image };
-                    _context.YoLoTbs.Add(yolotbs);
-                    _context.SaveChanges();
-                    if (aiModels.ModelCls == "目标监测")
-                    {
-                        return "data:image/jpeg;base64," + base64Image;
-                    }
-                    else
-                    {
-                        return result;
-                    }
-                }
-            }
-        }
+        return po.Photo;
     }
 
     public async Task<YoloPkqEditRes> GetPkqEdtTb(long id)
