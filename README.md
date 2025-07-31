@@ -1,4 +1,12 @@
-# 乐思赋能平台
+# 乐思平台
+## 单体应用版本
+https://gitee.com/libihao520/ai-recognition-system
+## 微服务版本
+1. （前端） LeSi-Platform-Web： https://github.com/Libihao520/LeSi-Platform-Web
+2. （网关/聚合层） LeSi-Platform-Api： https://github.com/Libihao520/LeSi-Platform-Api
+3. （管理后台核心） LeSi-Admin-Api： https://github.com/Libihao520/LeSi-Admin-Api
+4. （AI处理核心） LeSi-AI-Api： https://github.com/Libihao520/LeSi-AI-Api
+
 [![star](https://gitee.com/libihao520/ai-recognition-system/badge/star.svg?theme=dark)](https://gitee.com/libihao520/ai-recognition-system/stargazers)
 [![fork](https://gitee.com/libihao520/ai-recognition-system/badge/fork.svg?theme=dark)](https://gitee.com/libihao520/ai-recognition-system/members)
 ## 演示地址
@@ -15,7 +23,7 @@ http://47.107.226.106:8080/login
 6.  个人中心
 
 ## 框架开发依赖环境
- - 基于微软.NetCore8.0、C#12.0 开发，采用了主流数据库 MySQL、Redis，ORM 框架为 EFCore
+ - 基于微软.NetCore8.0、C#12.0 开发，采用了主流数据库 MySQL、Redis，ORM 框架为 EFCore Dapper
  - 后端：asp.net Core Api、JWT、QRCode、YoloDotNet、Autofac、AutoMapper、EPPlus、wrod模板引擎SharpDocx、YOLOv8、ONNX 
  - 前端：vue3、nodejs、vuex、axios请求、promise、element ui、element plus、pinia用户仓库与token持久化
 
@@ -28,6 +36,8 @@ http://47.107.226.106:8080/login
 链接: https://pan.baidu.com/s/1sTZ8uQLpyrl3hygkZ3VmvA?pwd=ewfk 提取码: ewfk
 模型下载下来后放到路径 ai-recognition-system\Ai-Web-API\WebApi\Model 下
 ```
+## 项目流程图
+![image](readmePhoto/乐思平台流程图_00.png)
 
 
 ## 详细介绍
