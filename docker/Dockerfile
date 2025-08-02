@@ -1,18 +1,28 @@
-#基于 `microsoft/dotnet:1.0.0-core` 来构建我们的镜像
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
+# 使用阿里云镜像加速（国内构建更快）
+FROM registry.cn-hangzhou.aliyuncs.com/microsoft/dotnet/sdk:8.0 AS build
+WORKDIR /src
 
+# 1. 优先复制解决方案文件和所有.csproj文件（利用Docker缓存）
+COPY ["LeSi-Platform-Api.sln", "./"]
+COPY ["WebApi/WebApi.csproj", "WebApi/"]
+COPY ["CommonUtil/CommonUtil.csproj", "CommonUtil/"]
+COPY ["Model/Model.csproj", "Model/"]
+COPY ["Service/Service.csproj", "Service/"]
+COPY ["EFCoreMigrations/EFCoreMigrations.csproj", "EFCoreMigrations/"]
+COPY ["Interface/Interface.csproj", "Interface/"]
 
-#设置工作目录为 `/publish` 文件夹，即容器启动默认的文件夹
-WORKDIR /publish
-#拷贝项目publish文件夹中的所有文件到 docker容器中的publish文件夹中 
-COPY /publish /publish
+# 2. 还原所有项目的NuGet包（依赖不变时跳过耗时步骤）
+RUN dotnet restore "LeSi-Platform-Api.sln"
 
-# 监听5157
-ENV ASPNETCORE_URLS=http://+:5157
+# 3. 复制剩余所有源代码
+COPY . .
 
-#设置Docker容器对外暴露8003端口
-EXPOSE 5157
+# 4. 发布WebApi项目（自动处理依赖的类库）
+RUN dotnet publish "WebApi/WebApi.csproj" -c Release -o /app/publish
 
-#使用`dotnet testmvc.dll`来运行应用程序
-
-CMD ["dotnet", "WebApi.dll", "--server.urls", "http://*:5157"]
+# 5. 使用运行时镜像
+FROM registry.cn-hangzhou.aliyuncs.com/microsoft/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /app/publish .
+EXPOSE 80
+ENTRYPOINT ["dotnet", "WebApi.dll"]
