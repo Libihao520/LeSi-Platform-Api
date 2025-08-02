@@ -1,8 +1,8 @@
-# 使用官方镜像（阿里云海外构建会自动加速）
+# 使用官方 .NET 8 SDK 镜像
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# 复制解决方案和项目文件
+# 1. 复制解决方案和所有.csproj文件（利用缓存）
 COPY ["LeSi-Platform-Api.sln", "./"]
 COPY ["WebApi/WebApi.csproj", "WebApi/"]
 COPY ["CommonUtil/CommonUtil.csproj", "CommonUtil/"]
@@ -11,14 +11,16 @@ COPY ["Service/Service.csproj", "Service/"]
 COPY ["EFCoreMigrations/EFCoreMigrations.csproj", "EFCoreMigrations/"]
 COPY ["Interface/Interface.csproj", "Interface/"]
 
-# 还原依赖
+# 2. 还原依赖
 RUN dotnet restore "LeSi-Platform-Api.sln"
 
-# 复制所有代码并发布
+# 3. 复制剩余所有代码
 COPY . .
+
+# 4. 发布WebApi项目
 RUN dotnet publish "WebApi/WebApi.csproj" -c Release -o /app/publish
 
-# 运行时镜像
+# 5. 使用运行时镜像
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
