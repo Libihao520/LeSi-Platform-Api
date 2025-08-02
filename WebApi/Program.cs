@@ -3,6 +3,7 @@ using LeSi.Admin.WebApi;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Config;
 using Microsoft.Extensions.DependencyInjection;
+using Service.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddSignalR(); 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Register();
@@ -52,6 +54,7 @@ app.UseAuthorization();
 
 #endregion
 
+app.MapHub<RecognitionHub>("/api/recognitionHub");
 
 app.MapControllers();
 

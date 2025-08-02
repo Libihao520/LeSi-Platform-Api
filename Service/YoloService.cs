@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 using AutoMapper;
@@ -8,6 +9,7 @@ using EFCoreMigrations;
 using Interface;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
@@ -17,9 +19,12 @@ using Model.Dto.photo;
 using Model.Dto.Yolo;
 using Model.Entities;
 using Model.Other;
+using Model.SignaIR;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
+using Service.SignalR;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
@@ -36,12 +41,15 @@ public class YoloService : IYoloService
     private readonly IConnection _rabbitMqConnection;
     private readonly UserInformationUtil _informationUtil;
     private readonly ILogger<YoloService> _logger;
+    private readonly IHubContext<RecognitionHub> _hubContext;
+    private readonly ConcurrentDictionary<long, string> _connectionMap = new ConcurrentDictionary<long, string>();
 
     private static readonly string? BasePath =
         Directory.GetCurrentDirectory();
 
     public YoloService(MyDbContext context, IMapper mapper, IHttpContextAccessor httpContextAccessor,
-        UserInformationUtil informationUtil, IConnection rabbitMqConnection, ILogger<YoloService> logger)
+        UserInformationUtil informationUtil, IConnection rabbitMqConnection, ILogger<YoloService> logger,
+        IHubContext<RecognitionHub> hubContext)
     {
         _context = context;
         _mapper = mapper;
@@ -49,6 +57,7 @@ public class YoloService : IYoloService
         _informationUtil = informationUtil;
         _rabbitMqConnection = rabbitMqConnection;
         _logger = logger;
+        _hubContext = hubContext;
     }
 
     /// <summary>
@@ -106,13 +115,19 @@ public class YoloService : IYoloService
 
         // 生成唯一任务ID
         var taskId = TimeBasedIdGeneratorUtil.GenerateId();
+        _connectionMap.TryAdd(taskId, po.connectionId);
+        // 生成回调队列名称
+        var callbackQueue = $"callback_queue_{taskId}";
+
         var message = new
         {
             TaskId = taskId,
+            FrontendTaskId = po.taskId,
             ModelCls = aiModels.ModelCls,
             ModelName = aiModels.ModelName,
             Photo = po.Photo,
             Path = aiModels.Path,
+            CallbackQueue = callbackQueue // 添加回调队列
         };
         // 发送到RabbitMQ
         using (var channel = _rabbitMqConnection.CreateModel())
@@ -135,6 +150,8 @@ public class YoloService : IYoloService
         }
 
         _logger.LogInformation($"Task {taskId} submitted for processing");
+
+        StartCallbackConsumer(callbackQueue, taskId);
 
         string base64 = po.Photo.Substring(po.Photo.IndexOf(',') + 1);
         byte[] data = Convert.FromBase64String(base64);
@@ -159,7 +176,34 @@ public class YoloService : IYoloService
         _context.YoLoTbs.Add(yolotbs);
         _context.SaveChanges();
 
-        return po.Photo;
+
+        return "任务已提交，处理中...";
+    }
+
+    // 监听回调队列的临时消费者
+    private void StartCallbackConsumer(string callbackQueue, long taskId)
+    {
+        var channel = _rabbitMqConnection.CreateModel();
+        channel.QueueDeclare(callbackQueue, durable: false, exclusive: true, autoDelete: true);
+
+        var consumer = new EventingBasicConsumer(channel);
+        consumer.Received += async (model, ea) =>
+        {
+            var body = ea.Body.ToArray();
+            var result = JsonSerializer.Deserialize<RecognitionResult>(Encoding.UTF8.GetString(body));
+
+            // 通过 SignalR 推送结果
+            if (_connectionMap.TryGetValue(taskId, out var connectionId))
+            {
+                await _hubContext.Clients.Client(connectionId).SendAsync("ReceiveRecognitionResult", result);
+                _connectionMap.TryRemove(taskId, out _);
+            }
+
+            channel.BasicAck(ea.DeliveryTag, false);
+            channel.Close(); // 处理完成后关闭临时队列
+        };
+
+        channel.BasicConsume(callbackQueue, autoAck: false, consumer);
     }
 
     public async Task<YoloPkqEditRes> GetPkqEdtTb(long id)

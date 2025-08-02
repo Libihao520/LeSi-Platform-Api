@@ -79,7 +79,12 @@ public static class HostBuiderExtend
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("CorsPolicy",
-                opt => opt.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod().WithExposedHeaders("X-Pagination"));
+                opt => opt
+                    .WithOrigins("http://127.0.0.1:8080") // 前端地址
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials() // 允许带凭证（如 SignalR、JWT）
+                    .WithExposedHeaders("X-Pagination"));
         });
     }
 }
