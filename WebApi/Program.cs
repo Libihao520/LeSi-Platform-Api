@@ -16,9 +16,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Register();
 
+var grpcSettings = builder.Configuration.GetSection("GrpcSettings");
 builder.Services.AddGrpcClient<AuthService.AuthServiceClient>(options =>
 {
-    options.Address = new Uri("http://localhost:5159");
+    options.Address = new Uri(grpcSettings["AuthServiceUrl"]);
 });
 
 //注入MyDbcontext
