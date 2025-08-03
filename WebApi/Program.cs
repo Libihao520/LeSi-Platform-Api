@@ -6,7 +6,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Service.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Configuration
+    .AddJsonFile("appsettings.json")
+    .AddJsonFile(
+        $"appsettings.{(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true" ? "Docker" : "Development")}.json",
+        optional: true);
 // Add services to the container.
 
 builder.Services.AddControllers();
