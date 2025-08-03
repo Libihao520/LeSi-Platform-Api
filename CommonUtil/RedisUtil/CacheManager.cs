@@ -13,12 +13,15 @@ public class CacheManager
             // Microsoft.Extensions.Configuration 6.0
             // Microsoft.Extensions.Configuration.Json 6.0
             ConfigurationBuilder configuration = new ConfigurationBuilder(); //读取配置文件
-            var config = configuration.SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile(file =>
-            {
-                file.Path = "/appsettings.json";
-                file.Optional = false;
-                file.ReloadOnChange = true;
-            }).Build();
+            var config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile(
+                    $"appsettings.{(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true" ? "Docker" : "Development")}.json",
+                    optional: true, 
+                    reloadOnChange: true)
+                .AddEnvironmentVariables()
+                .Build();
              RedisClient.StartConnect(config["Redis"]);
         }
 

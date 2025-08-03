@@ -186,7 +186,7 @@ public class YoloService : IYoloService
         var channel = _rabbitMqConnection.CreateModel();
         channel.QueueDeclare(callbackQueue, durable: false, exclusive: true, autoDelete: true);
 
-        var consumer = new EventingBasicConsumer(channel);
+        var consumer = new AsyncEventingBasicConsumer(channel);
         consumer.Received += async (model, ea) =>
         {
             var body = ea.Body.ToArray();
