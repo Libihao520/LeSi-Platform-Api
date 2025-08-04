@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1qazZAQ!hhh333
+    ports:
+      - "3306:3306"
+    volumes:
+      - /Users/libihao/Documents/docker/mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 10s
+      retries: 10  
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+  redis:
+    image: redis:latest
+    container_name: redis_db
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - /Users/libihao/Documents/docker/redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: password
+    ports:
+      - "5672:5672"  # AMQP协议端口
+      - "15672:15672"  # 管理界面端口
+    volumes:
+      - /Users/libihao/Documents/docker/rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+  # LeSi-Platform-Web服务（前端）
+  platform-web:
+    image: registry.cn-heyuan.aliyuncs.com/lsbc/platform-web:1
+    container_name: platform-web
+    ports:
+      - "80:8080"  # 前端通常使用80端口
+    depends_on:
+      admin-api:
+        condition: service_started
+      platform-api:
+        condition: service_started
+      ai-api:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+  # LeSi-Admin-Api服务
+  admin-api:
+    image: registry.cn-heyuan.aliyuncs.com/lsbc/admin-api:1
+    container_name: admin-api
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "5158:5158"  # HTTP
+      - "5159:5159"  # gRPC
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    volumes:
+      - ./admin-logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
+  # LeSi-Platform-Api服务
+  platform-api:
+    image: registry.cn-heyuan.aliyuncs.com/lsbc/platform-api:1
+    container_name: platform-api
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "5157:5157"  # 主端口
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    volumes:
+      - ./platform-logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+  # LeSi-AI-Api服务
+  ai-api:
+    image: registry.cn-heyuan.aliyuncs.com/lsbc/ai-api:1
+    container_name: ai-api
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "5027:5027"  # 使用您指定的5027端口
+    volumes:
+      - ./ai-logs:/app/logs
+      - ./ai-models:/app/Model  # 模型文件挂载
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+volumes:
+  mysql_data:
+  redis_data:
+  rabbitmq_data:
