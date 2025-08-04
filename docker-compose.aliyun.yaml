@@ -10,7 +10,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - /Users/libihao/Documents/docker/mysql_data:/var/lib/mysql
+      - .//mysql_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
@@ -28,7 +28,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - /Users/libihao/Documents/docker/redis_data:/data
+      - .//redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -50,7 +50,7 @@ services:
       - "5672:5672"  # AMQP协议端口
       - "15672:15672"  # 管理界面端口
     volumes:
-      - /Users/libihao/Documents/docker/rabbitmq_data:/var/lib/rabbitmq
+      - .//rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 10s
