@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   mysql:
-    image: mysql:latest
+    image: registry.cn-heyuan.aliyuncs.com/libihao/mysql:latest
     container_name: mysql_db
     restart: always
     environment:
@@ -23,7 +23,7 @@ services:
           memory: 2G
 
   redis:
-    image: redis:latest
+    image: registry.cn-heyuan.aliyuncs.com/libihao/redis:latest
     container_name: redis_db
     restart: always
     ports:
@@ -42,7 +42,7 @@ services:
           memory: 512M
 
   rabbitmq:
-    image: rabbitmq:3-management
+    image: registry.cn-heyuan.aliyuncs.com/libihao/rabbitmq:3-management
     container_name: rabbitmq
     restart: always
     environment:
