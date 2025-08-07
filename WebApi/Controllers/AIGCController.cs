@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Model.Dto.AiModel;
 using Model.Options;
 using Model.Other;
+using WebApi.Config;
 
 namespace WebApi.Controllers;
 
@@ -115,27 +116,28 @@ public class AigcController : ControllerBase
     private ClaimsPrincipal? ValidateToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(_jwtTokenOptions.SecurityKey);
+        var validationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidAudience = _jwtTokenOptions.Audience,
+            ValidIssuer = _jwtTokenOptions.Issuer,
+            IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
+            {
+                var publicKey = KeyResolverService.GetPublicKeyFromDynamicSource(token);
+                return new[] { new RsaSecurityKey(publicKey) };
+            }
+        };
 
         try
         {
-            //验证 token 并返回 ClaimsPrincipal
-            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = _jwtTokenOptions.Issuer,
-                ValidAudience = _jwtTokenOptions.Audience,
-                IssuerSigningKey = new SymmetricSecurityKey(key)
-            }, out SecurityToken validatedToken);
-
-            return principal; // 返回 ClaimsPrincipal
+            return tokenHandler.ValidateToken(token, validationParameters, out _);
         }
         catch
         {
-            return null; // token 无效
+            return null;
         }
     }
 }
