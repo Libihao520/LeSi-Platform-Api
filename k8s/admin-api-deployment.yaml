@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-api
+  namespace: lesi-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-api
+  template:
+    metadata:
+      labels:
+        app: admin-api
+    spec:
+      containers:
+      - name: admin-api
+        image: registry.cn-heyuan.aliyuncs.com/lsbc/admin-api:1
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        ports:
+        - containerPort: 5158
+        - containerPort: 5159
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1Gi
+        volumeMounts:
+        - mountPath: /app/logs
+          name: admin-api-logs
+      volumes:
+      - name: admin-api-logs
+        hostPath:
+          path: /data/logs/admin-api
+          type: DirectoryOrCreate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-api
+  namespace: lesi-platform
+spec:
+  selector:
+    app: admin-api
+  ports:
+    - name: http
+      protocol: TCP
+      port: 5158
+      targetPort: 5158
+    - name: grpc
+      protocol: TCP
+      port: 5159
+      targetPort: 5159

@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platform-api
+  namespace: lesi-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: platform-api
+  template:
+    metadata:
+      labels:
+        app: platform-api
+    spec:
+      containers:
+      - name: platform-api
+        image: registry.cn-heyuan.aliyuncs.com/lsbc/platform-api:1
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        ports:
+        - containerPort: 5157
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1Gi
+        volumeMounts:
+        - mountPath: /app/logs
+          name: platform-api-logs
+      volumes:
+      - name: platform-api-logs
+        hostPath:
+          path: /data/logs/platform-api
+          type: DirectoryOrCreate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: platform-api
+  namespace: lesi-platform
+spec:
+  selector:
+    app: platform-api
+  ports:
+    - protocol: TCP
+      port: 5157
+      targetPort: 5157

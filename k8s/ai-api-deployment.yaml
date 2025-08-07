@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-api
+  namespace: lesi-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-api
+  template:
+    metadata:
+      labels:
+        app: ai-api
+    spec:
+      containers:
+      - name: ai-api
+        image: registry.cn-heyuan.aliyuncs.com/lsbc/ai-api:1
+        ports:
+        - containerPort: 5027
+        resources:
+          limits:
+            cpu: "2"
+            memory: 4Gi
+        volumeMounts:
+        - mountPath: /app/logs
+          name: ai-api-logs
+        - mountPath: /app/Model
+          name: ai-models
+      volumes:
+      - name: ai-api-logs
+        hostPath:
+          path: /data/logs/ai-api
+          type: DirectoryOrCreate
+      - name: ai-models
+        hostPath:
+          path: /data/ai-models
+          type: DirectoryOrCreate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-api
+  namespace: lesi-platform
+spec:
+  selector:
+    app: ai-api
+  ports:
+    - protocol: TCP
+      port: 5027
+      targetPort: 5027
