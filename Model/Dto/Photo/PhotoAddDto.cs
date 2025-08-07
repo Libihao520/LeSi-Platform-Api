@@ -6,5 +6,5 @@ public class PhotoAddDto
     public string? Photo { get; set; }
 
     public string? taskId { get; set; }
-    public string connectionId { get; set; }
+    public string? connectionId { get; set; }
 }
