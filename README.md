@@ -10,7 +10,7 @@ https://gitee.com/libihao520/ai-recognition-system
 4. （AI处理核心） LeSi-AI-Api： https://github.com/Libihao520/LeSi-AI-Api
 
 ## 演示地址
-http://47.107.226.106:8080/login
+https://lesi.yumeng-kj.com/login
  - 账号：lbhlbh
  - 密码：123456
 ## 功能模块
@@ -68,5 +68,8 @@ https://libihao.blog.csdn.net/article/details/149899677
 
 1.  爱吃香蕉的阿豪
 2.  栖止
+
+## 特别鸣谢
+宇梦科技
 
 
