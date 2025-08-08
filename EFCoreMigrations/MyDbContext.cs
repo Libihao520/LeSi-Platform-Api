@@ -53,13 +53,13 @@ public class MyDbContext : DbContext
     // cd EFCoreMigrations
     //dotnet ef migrations add InitialCreate
     //dotnet ef database update
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        base.OnConfiguring(optionsBuilder);
-        //数据库连接字符串
-        optionsBuilder.UseMySql("server=mysql;port=3306;database=aitest;user=root;password=1qazZAQ!hhh333",
-            new MySqlServerVersion(new Version(8, 0, 33)));
-    }
+    // protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    // {
+    //     base.OnConfiguring(optionsBuilder);
+    //     //数据库连接字符串
+    //     optionsBuilder.UseMySql("server=127.0.0.1;port=3306;database=aitest;user=root;password=1qazZAQ!hhh333",
+    //         new MySqlServerVersion(new Version(8, 0, 33)));
+    // }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
