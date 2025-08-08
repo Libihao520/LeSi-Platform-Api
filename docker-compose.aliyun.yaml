@@ -19,8 +19,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 2G
+          cpus: '0.8'
+          memory: 1G
 
   redis:
     image: registry.cn-heyuan.aliyuncs.com/libihao/redis:latest
@@ -38,8 +38,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '0.4'
+          memory: 384M
 
   rabbitmq:
     image: registry.cn-heyuan.aliyuncs.com/libihao/rabbitmq:3-management
@@ -49,8 +49,8 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: password
     ports:
-      - "5672:5672"  # AMQP协议端口
-      - "15672:15672"  # 管理界面端口
+      - "5672:5672"
+      - "15672:15672"
     volumes:
       - ./data/rabbitmq:/var/lib/rabbitmq
     healthcheck:
@@ -61,15 +61,14 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '0.4'
+          memory: 384M
 
-  # LeSi-Platform-Web服务（前端）
   platform-web:
     image: registry.cn-heyuan.aliyuncs.com/lsbc/platform-web:1
     container_name: platform-web
     ports:
-      - "80:8080"  # 前端通常使用80端口
+      - "80:8080"
     depends_on:
       admin-api:
         condition: service_started
@@ -82,10 +81,9 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '0.4'
+          memory: 384M
 
-  # LeSi-Admin-Api服务
   admin-api:
     image: registry.cn-heyuan.aliyuncs.com/lsbc/admin-api:1
     container_name: admin-api
@@ -95,8 +93,8 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "5158:5158"  # HTTP
-      - "5159:5159"  # gRPC
+      - "5158:5158"
+      - "5159:5159"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
     volumes:
@@ -104,10 +102,9 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 1G
+          cpus: '0.8'
+          memory: 768M
 
-  # LeSi-Platform-Api服务
   platform-api:
     image: registry.cn-heyuan.aliyuncs.com/lsbc/platform-api:1
     container_name: platform-api
@@ -115,18 +112,18 @@ services:
       mysql:
         condition: service_healthy
     ports:
-      - "5157:5157"  # 主端口
+      - "5157:5157"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
     volumes:
       - ./data/logs/platform-api:/app/logs
+      - ./config/platform-api/appsettings.Docker.json:/app/appsettings.Docker.json
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 1G
+          cpus: '0.8'
+          memory: 768M
 
-  # LeSi-AI-Api服务
   ai-api:
     image: registry.cn-heyuan.aliyuncs.com/lsbc/ai-api:1
     container_name: ai-api
@@ -136,15 +133,15 @@ services:
       rabbitmq:
         condition: service_healthy
     ports:
-      - "5027:5027"  # 使用指定的5027端口
+      - "5027:5027"
     volumes:
       - ./data/logs/ai-api:/app/logs
-      - ./data/ai-models:/app/Model  # 模型文件挂载
+      - ./data/ai-models:/app/Model
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 4G
+          cpus: '1.0'   
+          memory: 1.5G   
 
 volumes:
   mysql_data:
