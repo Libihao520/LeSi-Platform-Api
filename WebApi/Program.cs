@@ -3,9 +3,15 @@ using LeSi.Admin.WebApi;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Config;
 using Microsoft.Extensions.DependencyInjection;
+using NLog.Web;
 using Service.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// 添加NLog服务
+builder.Logging.ClearProviders();
+builder.Host.UseNLog();
+
 builder.Configuration
     .AddJsonFile("appsettings.json")
     .AddJsonFile(
@@ -15,7 +21,7 @@ builder.Configuration
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddSignalR(); 
+builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Register();
@@ -62,5 +68,7 @@ app.UseAuthorization();
 app.MapHub<RecognitionHub>("/api/recognitionHub");
 
 app.MapControllers();
+
+app.Lifetime.ApplicationStopped.Register(() => NLog.LogManager.Shutdown());
 
 app.Run();
