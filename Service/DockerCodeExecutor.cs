@@ -29,8 +29,8 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
         string tempDir = null;
         try
         {
-            // 临时目录统一用 /tmp/xxx
-            tempDir = Path.Combine("/tmp", Path.GetRandomFileName());
+            // 临时目录统一用 /data/code-tmp/xxx，确保宿主机和所有容器都能访问
+            tempDir = Path.Combine("/data/code-tmp", Path.GetRandomFileName());
             Directory.CreateDirectory(tempDir);
             var javaFile = Path.Combine(tempDir, "Main.java");
             await File.WriteAllTextAsync(javaFile, code);
@@ -42,8 +42,8 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
             _logger.LogInformation($"javaFile: {javaFile}, exists: {File.Exists(javaFile)}");
             _logger.LogInformation($"javaFile content: {await File.ReadAllTextAsync(javaFile)}");
 
-            // 2. 使用安全的参数构建方式
-            var volumeMount = $"{tempDir}:/app:rw"; // 添加读写权限
+            // 挂载参数用宿主机目录
+            var volumeMount = $"{tempDir}:/app:rw";
 
             var processResult = await RunDockerCommandAsync(
                 "run", "--rm", "-v", volumeMount,
