@@ -51,7 +51,7 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
             }
 
             // 2. 使用安全的参数构建方式
-            var volumeMount = $"{EscapePath(tempDir)}:/app";
+            var volumeMount = $"{tempDir}:/app:rw"; // 添加读写权限
 
             var processResult = await RunDockerCommandAsync(
                 "run", "--rm", "-v", volumeMount,
