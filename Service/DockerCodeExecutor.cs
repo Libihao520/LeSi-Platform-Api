@@ -56,7 +56,7 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
             var processResult = await RunDockerCommandAsync(
                 "run", "--rm", "-v", volumeMount,
                 "registry.cn-heyuan.aliyuncs.com/libihao/jdk:8.0", "bash", "-c",
-                "cd /app && javac Main.java && java Main < input.txt"
+                "cd /app && ls && javac Main.java && java Main < input.txt"
             );
 
             return new ExecutionResult
