@@ -32,13 +32,23 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
             // 1. 创建临时目录和文件
             tempDir = CreateTempDirectory();
             var javaFile = Path.Combine(tempDir, "Main.java");
-            await File.WriteAllTextAsync(javaFile, code, Encoding.UTF8);
-
-            var cleanedCode = RemoveUtf8Bom(code);
-            await File.WriteAllTextAsync(javaFile, cleanedCode, new UTF8Encoding(false)); // 使用不带 BOM 的 UTF-8
-
             var inputFile = Path.Combine(tempDir, "input.txt");
+
+            // 先移除 BOM 再写入文件
+            var cleanedCode = RemoveUtf8Bom(code);
+            await File.WriteAllTextAsync(javaFile, cleanedCode, new UTF8Encoding(false));
             await File.WriteAllTextAsync(inputFile, input, new UTF8Encoding(false));
+
+            // 2. 检查文件是否确实创建
+            if (!File.Exists(javaFile))
+            {
+                return new ExecutionResult
+                {
+                    Success = false,
+                    Output = "",
+                    Error = "无法创建 Java 文件"
+                };
+            }
 
             // 2. 使用安全的参数构建方式
             var volumeMount = $"{EscapePath(tempDir)}:/app";
