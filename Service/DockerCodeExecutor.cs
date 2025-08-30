@@ -37,23 +37,15 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
             var inputFile = Path.Combine(tempDir, "input.txt");
             await File.WriteAllTextAsync(inputFile, input);
 
-            // 日志输出临时目录和文件路径
-            _logger.LogInformation($"tempDir: {tempDir}");
-            _logger.LogInformation($"javaFile: {javaFile}, exists: {File.Exists(javaFile)}");
-            _logger.LogInformation($"javaFile content: {await File.ReadAllTextAsync(javaFile)}");
-
             // 挂载参数用宿主机目录
             var volumeMount = $"{tempDir}:/app:rw";
 
             var processResult = await RunDockerCommandAsync(
                 "run", "--rm", "-v", volumeMount,
                 "registry.cn-heyuan.aliyuncs.com/libihao/jdk:8.0", "bash", "-c",
-                "cd /app && ls -l /app && javac Main.java && java Main < input.txt"
+                "cd /app && javac Main.java && java Main < input.txt"
             );
-
-            _logger.LogInformation($"Docker output: {processResult.Output}");
-            _logger.LogInformation($"Docker error: {processResult.Error}");
-
+            
             return new ExecutionResult
             {
                 Success = processResult.ExitCode == 0,
