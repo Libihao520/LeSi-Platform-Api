@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Text;
 using CommonUtil;
 using Interface;
+using Microsoft.Extensions.Logging;
+using Model;
 
 namespace Service;
 
@@ -10,10 +12,12 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
     private readonly string _tempBaseDir;
     private readonly List<string> _tempDirsToCleanup = new();
     private readonly UserInformationUtil _userInformationUtil;
+    private readonly ILogger<DockerCodeExecutor> _logger;
 
-    public DockerCodeExecutor(UserInformationUtil userInformationUtil)
+    public DockerCodeExecutor(UserInformationUtil userInformationUtil, ILogger<DockerCodeExecutor> logger)
     {
         _userInformationUtil = userInformationUtil;
+        _logger = logger;
         // 创建临时目录，每个用户一个目录
         _tempBaseDir = Path.Combine(Path.GetTempPath(), "code_executor",
             _userInformationUtil.GetCurrentUserId().ToString());
@@ -50,6 +54,16 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
                 Success = processResult.ExitCode == 0,
                 Output = processResult.Output,
                 Error = processResult.Error,
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "代码执行失败");
+            return new ExecutionResult
+            {
+                Success = false,
+                Output = "",
+                Error = "代码执行失败: " + ex.Message,
             };
         }
         finally
