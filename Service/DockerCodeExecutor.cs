@@ -29,26 +29,18 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
         string tempDir = null;
         try
         {
-            // 1. 创建临时目录和文件
-            tempDir = CreateTempDirectory();
+            // 临时目录统一用 /tmp/xxx
+            var tempDir = Path.Combine("/tmp", Path.GetRandomFileName());
+            Directory.CreateDirectory(tempDir);
             var javaFile = Path.Combine(tempDir, "Main.java");
+            await File.WriteAllTextAsync(javaFile, code);
             var inputFile = Path.Combine(tempDir, "input.txt");
+            await File.WriteAllTextAsync(inputFile, input);
 
-            // 先移除 BOM 再写入文件
-            var cleanedCode = RemoveUtf8Bom(code);
-            await File.WriteAllTextAsync(javaFile, cleanedCode, new UTF8Encoding(false));
-            await File.WriteAllTextAsync(inputFile, input, new UTF8Encoding(false));
-
-            // 2. 检查文件是否确实创建
-            if (!File.Exists(javaFile))
-            {
-                return new ExecutionResult
-                {
-                    Success = false,
-                    Output = "",
-                    Error = "无法创建 Java 文件"
-                };
-            }
+            // 日志输出临时目录和文件路径
+            _logger.LogInformation($"tempDir: {tempDir}");
+            _logger.LogInformation($"javaFile: {javaFile}, exists: {File.Exists(javaFile)}");
+            _logger.LogInformation($"javaFile content: {await File.ReadAllTextAsync(javaFile)}");
 
             // 2. 使用安全的参数构建方式
             var volumeMount = $"{tempDir}:/app:rw"; // 添加读写权限
@@ -56,8 +48,11 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
             var processResult = await RunDockerCommandAsync(
                 "run", "--rm", "-v", volumeMount,
                 "registry.cn-heyuan.aliyuncs.com/libihao/jdk:8.0", "bash", "-c",
-                "cd /app && ls && javac Main.java && java Main < input.txt"
+                "cd /app && ls -l /app && javac Main.java && java Main < input.txt"
             );
+
+            _logger.LogInformation($"Docker output: {processResult.Output}");
+            _logger.LogInformation($"Docker error: {processResult.Error}");
 
             return new ExecutionResult
             {
