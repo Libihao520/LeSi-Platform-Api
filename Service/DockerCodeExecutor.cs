@@ -30,7 +30,7 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
         try
         {
             // 临时目录统一用 /tmp/xxx
-            var tempDir = Path.Combine("/tmp", Path.GetRandomFileName());
+            tempDir = Path.Combine("/tmp", Path.GetRandomFileName());
             Directory.CreateDirectory(tempDir);
             var javaFile = Path.Combine(tempDir, "Main.java");
             await File.WriteAllTextAsync(javaFile, code);
