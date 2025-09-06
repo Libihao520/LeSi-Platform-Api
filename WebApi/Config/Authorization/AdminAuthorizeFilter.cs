@@ -6,10 +6,13 @@ namespace WebApi.Config.Authorization;
 
 public class AdminAuthorizeFilter : IAuthorizationFilter
 {
+    private readonly string _errorMessage;
+
     private readonly AuthorizeRoleName _role;
 
-    public AdminAuthorizeFilter(AuthorizeRoleName role)
+    public AdminAuthorizeFilter(AuthorizeRoleName role, string errorMessage)
     {
+        _errorMessage = errorMessage;
         _role = role;
     }
 
@@ -28,7 +31,15 @@ public class AdminAuthorizeFilter : IAuthorizationFilter
 
         if (userRole != _role)
         {
-            context.Result = new ForbidResult(); 
+            context.Result = new JsonResult(new
+            {
+                Code = 403,
+                Message = _errorMessage,
+                Data = (object)null
+            })
+            {
+                StatusCode = 403
+            };
         }
     }
 
