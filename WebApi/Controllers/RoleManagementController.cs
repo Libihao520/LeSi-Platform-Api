@@ -12,6 +12,7 @@ namespace WebApi.Controllers;
 [Route("api/[controller]/[action]")]
 [ApiController]
 [Authorize]
+[AdminAuthorize(AuthorizeRoleName.Administrator, "只有管理员可以操作用户")]
 public class RoleManagementController : ControllerBase
 {
     private readonly IRoleManagementService _managementService;
@@ -38,7 +39,6 @@ public class RoleManagementController : ControllerBase
     /// <param name="id"></param>
     /// <returns></returns>
     [HttpDelete]
-    [AdminAuthorize(AuthorizeRoleName.Administrator,"只有管理员可以删除用户")]
     public async Task<ApiResult> Deleted(long id)
     {
         return await _managementService.DeleteUserRoleAsync(id);
@@ -50,7 +50,6 @@ public class RoleManagementController : ControllerBase
     /// <param name="res"></param>
     /// <returns></returns>
     [HttpPut]
-    [AdminAuthorize(AuthorizeRoleName.Administrator,"只有管理员可以更新用户角色")]
     public async Task<ApiResult> PutUserRole(PutUserRoleRes res)
     {
         return await _managementService.AddOrUpdateUserRole(res);
@@ -62,7 +61,7 @@ public class RoleManagementController : ControllerBase
     /// <param name="file"></param>
     /// <returns></returns>
     [HttpPost]
-    [AdminAuthorize(AuthorizeRoleName.Administrator,"只有管理员可以导入用户")]
+    [AdminAuthorize(AuthorizeRoleName.Administrator, "只有管理员可以导入用户")]
     public async Task<ApiResult> UploadUserFile(IFormFile file)
     {
         return await _managementService.ImportUsersFromExcel(file);
@@ -84,7 +83,6 @@ public class RoleManagementController : ControllerBase
     /// </summary>
     /// <returns></returns>
     [HttpGet]
-    [AdminAuthorize(AuthorizeRoleName.Administrator,"只有管理员可以下载导入模板")]
     public async Task<IActionResult> downloadExcelTemplate()
     {
         var filePath = Path.Combine(Directory.GetCurrentDirectory(), "ExcelTemplate", "用户管理导入模板.xlsx");
