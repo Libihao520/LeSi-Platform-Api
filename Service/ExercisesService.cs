@@ -395,6 +395,7 @@ public class ExercisesService : IExercisesService
         {
             var list = _context.TestPapersManages
                 .Where(q => q.HasAnsweringStarted == true)
+                .Where(q => q.IsDeleted == 0)
                 .Select(q => q.QuestionBankCourseTitle).Distinct().ToList();
             var resultList = list.Select((title, index) => new Dictionary<string, object>
             {
