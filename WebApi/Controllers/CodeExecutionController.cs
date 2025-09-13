@@ -30,9 +30,13 @@ public class CodeExecutionController : ControllerBase
         }
         else if (request.Language == "python")
         {
-            // var result = await _codeExecutor.ExecutePython(request.Code, input);
-            // return ResultHelper.Success("成功", result);
-            return ResultHelper.Error("开发中～～～～～");
+            var result = await _codeExecutor.ExecutePython(request.Code, input);
+            return ResultHelper.Success("成功", result);
+        }
+        else if (request.Language == "cpp")
+        {
+            var result = await _codeExecutor.ExecuteCpp(request.Code, input);
+            return ResultHelper.Success("成功", result);
         }
         else
         {

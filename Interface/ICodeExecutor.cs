@@ -4,6 +4,7 @@ public interface ICodeExecutor
 {
     Task<ExecutionResult> ExecuteJava(string code, string input);
     Task<ExecutionResult> ExecutePython(string code, string input);
+    Task<ExecutionResult> ExecuteCpp(string code, string input);
 }
 
 public class ExecutionResult

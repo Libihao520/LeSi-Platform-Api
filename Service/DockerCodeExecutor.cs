@@ -29,9 +29,20 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
         string tempDir = null;
         try
         {
-            // 临时目录统一用 /data/code-tmp/xxx，确保宿主机和所有容器都能访问
-            tempDir = Path.Combine("/data/code-tmp", Path.GetRandomFileName());
-            Directory.CreateDirectory(tempDir);
+            try
+            {
+                // 临时目录统一用 /data/code-tmp/xxx，确保宿主机和所有容器都能访问
+                tempDir = Path.Combine("/data/code-tmp", Path.GetRandomFileName());
+                Directory.CreateDirectory(tempDir);
+            }
+            catch (Exception e)
+            {
+                // 如果 /data/code-tmp 不可用，回退到临时目录
+                tempDir = Path.Combine(_tempBaseDir, Path.GetRandomFileName());
+                Directory.CreateDirectory(tempDir);
+                _logger.LogWarning("/data/code-tmp 不可用，使用临时目录: {TempDir}", tempDir);
+            }
+
             var javaFile = Path.Combine(tempDir, "Main.java");
             await File.WriteAllTextAsync(javaFile, code);
             var inputFile = Path.Combine(tempDir, "input.txt");
@@ -45,7 +56,7 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
                 "registry.cn-heyuan.aliyuncs.com/libihao/jdk:8.0", "bash", "-c",
                 "cd /app && javac Main.java && java Main < input.txt"
             );
-            
+
             return new ExecutionResult
             {
                 Success = processResult.ExitCode == 0,
@@ -75,25 +86,105 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
         string tempDir = null;
         try
         {
-            tempDir = CreateTempDirectory();
+            try
+            {
+                // 临时目录统一用 /data/code-tmp/xxx，确保宿主机和所有容器都能访问
+                tempDir = Path.Combine("/data/code-tmp", Path.GetRandomFileName());
+                Directory.CreateDirectory(tempDir);
+            }
+            catch (Exception e)
+            {
+                // 如果 /data/code-tmp 不可用，回退到临时目录
+                tempDir = Path.Combine(_tempBaseDir, Path.GetRandomFileName());
+                Directory.CreateDirectory(tempDir);
+                _logger.LogWarning("/data/code-tmp 不可用，使用临时目录: {TempDir}", tempDir);
+            }
             var pyFile = Path.Combine(tempDir, "main.py");
             await File.WriteAllTextAsync(pyFile, code, Encoding.UTF8);
 
             var inputFile = Path.Combine(tempDir, "input.txt");
             await File.WriteAllTextAsync(inputFile, input, Encoding.UTF8);
 
-            var volumeMount = $"{EscapePath(tempDir)}:/app";
+            var volumeMount = $"{tempDir}:/app:rw";
 
             var processResult = await RunDockerCommandAsync(
                 "run", "--rm", "-v", volumeMount,
-                "python:3", "bash", "-c",
+                "registry.cn-heyuan.aliyuncs.com/libihao/python:3.7", "bash", "-c",
                 "cd /app && python main.py < input.txt"
             );
 
+            // 添加 Success 状态返回
             return new ExecutionResult
             {
+                Success = processResult.ExitCode == 0,
                 Output = processResult.Output,
                 Error = processResult.Error,
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Python代码执行失败");
+            return new ExecutionResult
+            {
+                Success = false,
+                Output = "",
+                Error = "代码执行失败: " + ex.Message,
+            };
+        }
+        finally
+        {
+            SafeDeleteDirectory(tempDir);
+        }
+    }
+
+    public async Task<ExecutionResult> ExecuteCpp(string code, string input)
+    {
+        string tempDir = null;
+        try
+        {
+            try
+            {
+                // 临时目录统一用 /data/code-tmp/xxx，确保宿主机和所有容器都能访问
+                tempDir = Path.Combine("/data/code-tmp", Path.GetRandomFileName());
+                Directory.CreateDirectory(tempDir);
+            }
+            catch (Exception e)
+            {
+                // 如果 /data/code-tmp 不可用，回退到临时目录
+                tempDir = Path.Combine(_tempBaseDir, Path.GetRandomFileName());
+                Directory.CreateDirectory(tempDir);
+                _logger.LogWarning("/data/code-tmp 不可用，使用临时目录: {TempDir}", tempDir);
+            }
+            var cppFile = Path.Combine(tempDir, "main.cpp");
+            await File.WriteAllTextAsync(cppFile, code, Encoding.UTF8);
+
+            var inputFile = Path.Combine(tempDir, "input.txt");
+            await File.WriteAllTextAsync(inputFile, input, Encoding.UTF8);
+
+            var volumeMount = $"{tempDir}:/app:rw";
+
+            var processResult = await RunDockerCommandAsync(
+                "run", "--rm", "-v", volumeMount,
+                "registry.cn-heyuan.aliyuncs.com/libihao/gcc::13", "bash", "-c",
+                "cd /app && g++ -o main main.cpp && ./main < input.txt"
+            );
+
+            // 添加 Success 状态返回
+            return new ExecutionResult
+            {
+                Success = processResult.ExitCode == 0,
+                Output = processResult.Output,
+                Error = processResult.Error,
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "C++代码执行失败");
+            return new ExecutionResult
+            {
+                Success = false,
+                Output = "",
+                Error = "代码执行失败: " + ex.Message,
             };
         }
         finally
