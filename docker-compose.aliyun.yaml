@@ -67,8 +67,9 @@ services:
   platform-web:
     image: registry.cn-heyuan.aliyuncs.com/lsbc/platform-web:1
     container_name: platform-web
+    restart: always
     ports:
-      - "80:8080"
+      - "6699:8080"
     depends_on:
       admin-api:
         condition: service_started
@@ -87,6 +88,7 @@ services:
   admin-api:
     image: registry.cn-heyuan.aliyuncs.com/lsbc/admin-api:1
     container_name: admin-api
+    restart: always
     depends_on:
       mysql:
         condition: service_healthy
@@ -107,7 +109,9 @@ services:
 
   platform-api:
     image: registry.cn-heyuan.aliyuncs.com/lsbc/platform-api:1
+    user: root
     container_name: platform-api
+    restart: always
     depends_on:
       mysql:
         condition: service_healthy
@@ -116,17 +120,21 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
     volumes:
+      - /data/code-tmp:/data/code-tmp
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker 
       - ./data/logs/platform-api:/app/logs
       - ./config/platform-api/appsettings.Docker.json:/app/appsettings.Docker.json
     deploy:
       resources:
         limits:
-          cpus: '0.8'
-          memory: 768M
+          cpus: '2.0'   
+          memory: 2G  
 
   ai-api:
     image: registry.cn-heyuan.aliyuncs.com/lsbc/ai-api:1
     container_name: ai-api
+    restart: always
     depends_on:
       mysql:
         condition: service_healthy
