@@ -72,6 +72,21 @@ public class ExercisesService : IExercisesService
 
     public async Task<ApiResult> checkSubmit(SubMitExercisesReq req)
     {
+        var user = _httpContextAccessor.HttpContext.User;
+        var createUserId = long.Parse(user.Claims.FirstOrDefault(c => c.Type == "Id").Value);
+
+        // 检查是否已经提交过该试卷且未删除
+        var existingReportCard = _context.ReportCards
+            .FirstOrDefault(x => x.CreateUserId == createUserId
+                                 && x.TestPapersManageId == req.TestPapersManageId
+                                 && x.IsDeleted == 0);
+
+        if (existingReportCard != null)
+        {
+            // 用户已提交过该试卷且未删除，不能重复提交
+            return ResultHelper.Error("请勿重复提交！如需重新答题，请联系管理员删除之前的成绩记录！");
+        }
+
         //得分
         int score = 0;
         int correctQuantity = 0;
@@ -122,9 +137,8 @@ public class ExercisesService : IExercisesService
             }
         }
 
-        var user = _httpContextAccessor.HttpContext.User;
-        var createUserId = long.Parse(user.Claims.FirstOrDefault(c => c.Type == "Id").Value);
 
+        var testPapersManage = _context.TestPapersManages.Where(x => x.Id == req.TestPapersManageId).FirstOrDefault();
         ReportCard reportCard1 = new ReportCard
         {
             Id = TimeBasedIdGeneratorUtil.GenerateId(),
@@ -133,7 +147,7 @@ public class ExercisesService : IExercisesService
 
             CreateUserId = createUserId,
 
-            Subject = "数学",
+            Subject = testPapersManage.FileLabel + "-" + testPapersManage.QuestionBankCourseTitle,
             //总分
             TotalPoints = score,
             //总数
@@ -419,7 +433,7 @@ public class ExercisesService : IExercisesService
             return ResultHelper.Success("请求成功", resultList);
         }
     }
-    
+
     public async Task<ApiResult> DeleteTestPaperManage(long id)
     {
         try

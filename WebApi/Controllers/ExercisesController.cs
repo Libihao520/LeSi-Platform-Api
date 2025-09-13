@@ -50,6 +50,7 @@ public class ExercisesController : ControllerBase
     /// <param name="req"></param>
     /// <returns></returns>
     [HttpGet]
+    [AdminAuthorize(AuthorizeRoleName.Administrator, "只有管理员可以删除成绩")]
     public Task<ApiResult> GetAchievementCenter([FromQuery] GetAchievementCenterReq req)
     {
         return _exercisesService.AchievementCenter(req);
