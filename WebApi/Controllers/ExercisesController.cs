@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Model.Dto.TestPaperManage;
 using Model.Dto.TestPapers;
 using Model.Entities;
+using Model.Enum;
 using Model.Other;
+using WebApi.Config.Authorization;
 
 namespace WebApi.Controllers;
 
@@ -97,6 +99,18 @@ public class ExercisesController : ControllerBase
     public async Task<ApiResult> GetSubjectsOrFileLabel([FromQuery] string? subjectName)
     {
         return await _exercisesService.GetSubjectsOrFileLabel(subjectName);
+    }
+
+    /// <summary>
+    /// 删除题库
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    [HttpDelete]
+    [AdminAuthorize(AuthorizeRoleName.Administrator, "只有管理员可以删除题库")]
+    public async Task<ApiResult> DeleteTestPaperManage([FromQuery] long id)
+    {
+        return await _exercisesService.DeleteTestPaperManage(id);
     }
 
     /// <summary>

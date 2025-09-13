@@ -418,6 +418,26 @@ public class ExercisesService : IExercisesService
             return ResultHelper.Success("请求成功", resultList);
         }
     }
+    
+    public async Task<ApiResult> DeleteTestPaperManage(long id)
+    {
+        try
+        {
+            var testPapersManage = await _context.TestPapersManages.FindAsync(id);
+            // 不为空则执行软删除并且保存到数据库中
+            if (testPapersManage != null)
+            {
+                testPapersManage.IsDeleted = 1;
+                await _context.SaveChangesAsync();
+            }
+
+            return ResultHelper.Success("请求成功！", "数据已删除");
+        }
+        catch (Exception e)
+        {
+            return ResultHelper.Error("数据删除失败!");
+        }
+    }
 
     public async Task<ApiResult> ChangeHasAnsweringStarted(long id)
     {

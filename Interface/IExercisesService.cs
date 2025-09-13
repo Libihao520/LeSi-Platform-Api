@@ -64,6 +64,13 @@ public interface IExercisesService
     Task<ApiResult> GetSubjectsOrFileLabel(string? subjectName);
 
     /// <summary>
+    /// 删除题库
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    Task<ApiResult> DeleteTestPaperManage(long id);
+
+    /// <summary>
     /// 开启作答
     /// </summary>
     /// <param name="id"></param>
