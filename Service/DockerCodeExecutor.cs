@@ -165,7 +165,7 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
 
             var processResult = await RunDockerCommandAsync(
                 "run", "--rm", "-v", volumeMount,
-                "registry.cn-heyuan.aliyuncs.com/libihao/gcc::13", "bash", "-c",
+                "registry.cn-heyuan.aliyuncs.com/libihao/gcc:13", "bash", "-c",
                 "cd /app && g++ -o main main.cpp && ./main < input.txt"
             );
 
