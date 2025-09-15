@@ -103,7 +103,11 @@ public class DockerCodeExecutor : ICodeExecutor, IDisposable
             await File.WriteAllTextAsync(pyFile, code, Encoding.UTF8);
 
             var inputFile = Path.Combine(tempDir, "input.txt");
-            await File.WriteAllTextAsync(inputFile, input, Encoding.UTF8);
+            // 手动移除BOM字符并标准化换行符
+            var cleanInput = input.Replace("\ufeff", "").Replace("\r\n", "\n").Replace("\r", "\n");
+            // 使用无BOM的UTF8编码
+            var utf8NoBom = new UTF8Encoding(false);
+            await File.WriteAllTextAsync(inputFile, cleanInput, utf8NoBom);
 
             var volumeMount = $"{tempDir}:/app:rw";
 

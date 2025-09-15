@@ -61,9 +61,40 @@ public class MyDbContext : DbContext
     //         new MySqlServerVersion(new Version(8, 0, 33)));
     // }
 
+    //CodeExam
+    public DbSet<Question> Questions { get; set; }
+    public DbSet<ExamRecord> ExamRecords { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // 自动加载所有配置类
         modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
+        //CodeExam
+        base.OnModelCreating(modelBuilder);
+
+        // 配置Question实体
+        modelBuilder.Entity<Question>(entity =>
+        {
+            entity.HasKey(q => q.Id);
+            entity.Property(q => q.Title).IsRequired().HasMaxLength(255);
+            entity.Property(q => q.Description).IsRequired();
+            entity.Property(q => q.ExampleInput).IsRequired();
+            entity.Property(q => q.ExampleOutput).IsRequired();
+        });
+
+        // 配置ExamRecord实体
+        modelBuilder.Entity<ExamRecord>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.StudentCode).IsRequired();
+            entity.HasOne(e => e.Question)
+                  .WithMany()
+                  .HasForeignKey(e => e.QuestionId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.User) // 添加用户关系
+              .WithMany(u => u.ExamRecords)
+              .HasForeignKey(e => e.UserId)
+              .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
