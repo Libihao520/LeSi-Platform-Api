@@ -44,6 +44,16 @@ public class MyDbContext : DbContext
     {
     }
 
+    /// <summary>
+    /// 编程题目
+    /// </summary>
+    public DbSet<Question> Questions { get; set; }
+
+    /// <summary>
+    /// 编程考试记录
+    /// </summary>
+    public DbSet<ExamRecord> ExamRecords { get; set; }
+
     // 注入方式配置
     public MyDbContext(DbContextOptions<MyDbContext> options) : base(options)
     {
