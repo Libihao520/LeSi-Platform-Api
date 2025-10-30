@@ -22,7 +22,7 @@ public class YoloController : ControllerBase
     }
 
     /// <summary>
-    /// 获取皮卡丘表单数据
+    /// 获取AI识别表单数据
     /// </summary>
     /// <returns></returns>
     [HttpGet]
