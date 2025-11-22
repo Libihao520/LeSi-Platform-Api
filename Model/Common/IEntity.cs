@@ -23,6 +23,16 @@ public abstract class Entity : Base
     public DateTime CreateDate { get; set; }
 
     /// <summary>
+    /// 修改人Id
+    /// </summary>
+    public long? LastModifiedUserId { get; set; }
+
+    /// <summary>
+    /// 修改日期
+    /// </summary>
+    public DateTime? LastModifiedDate { get; set; }
+
+    /// <summary>
     /// 是否删除
     /// </summary>
     [Required]
