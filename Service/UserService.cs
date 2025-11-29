@@ -39,16 +39,6 @@ public class UserService : IUserService
         _informationUtil = informationUtil;
     }
 
-    public GetUserRes GetUser(string userName, string passWord)
-    {
-        var users = _context.Users.Where(u => u.Name == userName && u.PassWord == passWord).FirstOrDefault();
-        if (users != null)
-        {
-            return _mapper.Map<GetUserRes>(users);
-        }
-
-        return new GetUserRes();
-    }
 
     public async Task<ApiResult> Add(AddUserReq addUserReq)
     {
@@ -77,7 +67,7 @@ public class UserService : IUserService
             return ResultHelper.Error("用户名已被注册，请换一个！");
         }
 
-        var password = AesUtilities.Decrypt(addUserReq.PassWord);
+        var password = Md5Utilities.GetMd5Hash(AesUtilities.Decrypt(addUserReq.PassWord));
         var decodeEmail = AesUtilities.Decrypt(addUserReq.Email);
 
         if (!IsValidEmail(decodeEmail))
@@ -108,8 +98,8 @@ public class UserService : IUserService
             Users user = new Users()
             {
                 Name = addUserReq.UserName,
-                PassWord = addUserReq.PassWord,
-                Email = decodeEmail,
+                PassWord = password,
+                Email = addUserReq.Email,
                 CreateDate = DateTime.Now,
                 CreateUserId = 0,
                 IsDeleted = 0

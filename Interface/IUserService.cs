@@ -7,14 +7,6 @@ namespace Interface;
 public interface IUserService
 {
     /// <summary>
-    /// 获取用户token
-    /// </summary>
-    /// <param name="userName"></param>
-    /// <param name="passWord"></param>
-    /// <returns></returns>
-    GetUserRes GetUser(string userName, string passWord);
-
-    /// <summary>
     /// 添加用户
     /// </summary>
     /// <param name="addUserReq"></param>
