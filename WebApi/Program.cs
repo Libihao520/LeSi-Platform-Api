@@ -3,6 +3,7 @@ using LeSi.Admin.WebApi;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Config;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models;
 using NLog.Web;
 using Service.SignalR;
 
@@ -23,7 +24,35 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+            
+    // 添加 JWT Bearer 认证配置
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+    {
+        Description = "请输入token格式为Bearer xxxxxx(中间必须有空格)",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        BearerFormat = "JWT",
+        Scheme = "Bearer"
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme()
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
+
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = $"LeSi Admin API", Version = "v1" });
+});
 builder.Register();
 
 var grpcSettings = builder.Configuration.GetSection("GrpcSettings");
